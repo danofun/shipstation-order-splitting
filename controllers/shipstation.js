@@ -95,6 +95,7 @@ const splitShipstationOrder = (order, orderItems) => {
       if (x !== 0) {
         delete tempOrder.orderKey;
         delete tempOrder.orderId;
+        delete tempOrder.tagId;
         tempOrder.amountPaid = 0;
         tempOrder.taxAmount = 0;
         tempOrder.shippingAmount = 0;
