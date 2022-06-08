@@ -13,7 +13,16 @@ This project uses the following environment variables:
 | ----------------------------- | ------------------------------------| -----------------------------------------------|
 |SHIPSTATION_API_KEY           | Your base64 encoded ShipStation Username:Password          | N/A      |
 
+# Docker
+- grab the docker-compose.yml
+- add an .env file with your SHIPSTATION_API_KEY
+- start the application
+```
+docker-compose up -d
+```
+- Alteratively, you could build your own Docker Hub image. [Here](https://buddy.works/guides/how-dockerize-node-application#part-2-dockerizing-nodejs-application) is a an excellent guide.
 
+# Manual Install
 # Pre-requisites
 - Install [Node.js](https://nodejs.org/en/)
 
@@ -32,10 +41,10 @@ npm install
 ```
 npm start
 ```
-  Navigate to `http://localhost:3000`
+  Navigate to `http://localhost:10003`
 
 - API Document endpoints
 
-  ShipStation New Order Webhook: Endpoint : http://localhost:3000/shipstation/new-order-webhook
+  ShipStation New Order Webhook: Endpoint : http://localhost:10003/shipstation/new-order-webhook
   
   

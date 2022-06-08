@@ -22,6 +22,7 @@ exports.newOrders = async (req, res, next) => {
       data: response.data.orders,
     });
   } catch (err) {
+    console.error(err);
     throw new Error(err);
   }
 };
@@ -37,20 +38,20 @@ const analyzeOrders = async (newOrders) => {
     try {
       const order = newOrders[x];
 
-      // Create an array of all the individual warehouseLocations present on the order.
-      const warehouses = [
+      // Create an array of all the individual items (orderItemId) present on the order.
+      const orderItems = [
         ...new Set(
           order.items.map((item) => {
-            if (item.warehouseLocation != null) {
-              return item.warehouseLocation;
+            if (item.orderItemId != null) {
+              return item.orderItemId;
             }
           })
         ),
       ];
 
-      // If there are multiple warehouse locations, split the order.
-      if (warehouses.length > 1) {
-        const orderUpdateArray = splitShipstationOrder(order, warehouses);
+      // If there are multiple items, split the order.
+      if (orderItems.length > 1) {
+        const orderUpdateArray = splitShipstationOrder(order, orderItems);
         await shipstationApiCall(
           "https://ssapi.shipstation.com/orders/createorders",
           "post",
@@ -58,39 +59,36 @@ const analyzeOrders = async (newOrders) => {
         );
       }
     } catch (err) {
+      console.error(err);
       throw new Error(err);
     }
   }
 };
 
 /**
- * Copies the primary order for each new order, adjusting the items on each to correspond
- * to the correct warehouse location.
+ * Copies the primary order for each new order.
  *
  * @param  {object} order an order object from the ShipStation API
- * @param {array} warehouses an array of strings containing the warehouse names
+ * @param {array} orderItems an array of strings containing the orderItemId
  *
  * @return {array} an array of order objects to be updated in ShipStation
  */
-const splitShipstationOrder = (order, warehouses) => {
+const splitShipstationOrder = (order, orderItems) => {
   let orderUpdateArray = [];
 
-  // Loop through every warehouse present on the order.
-  for (let x = 0; x < warehouses.length; x++) {
+  // Loop through every item present on the order.
+  for (let x = 0; x < orderItems.length; x++) {
     try {
       // Create a copy of the original order object.
       let tempOrder = { ...order };
 
-      // Give the new order a number to include the warehouse as a suffix.
-      tempOrder.orderNumber = `${tempOrder.orderNumber}-${warehouses[x]}`;
+      // Give the new order a number to include the orderItemId as a suffix.
+      let y = x + 1;
+      tempOrder.orderNumber = `${tempOrder.orderNumber}-${y}`;
 
-      // Filter for the order items for this specific warehouse.
+      // Filter for the order items.
       tempOrder.items = tempOrder.items.filter((item) => {
-        // If the item's warehouseLocation is null, assign it to the first warehouse present.
-        if (item.warehouseLocation == null && x === 0) {
-          item.warehouseLocation = warehouses[x];
-        }
-        return item.warehouseLocation === warehouses[x];
+        return item.orderItemId === orderItems[x];
       });
 
       // If this is not the first (primary) order, set the object to create new order in ShipStation.
@@ -103,6 +101,7 @@ const splitShipstationOrder = (order, warehouses) => {
       }
       orderUpdateArray.push(tempOrder);
     } catch (err) {
+      console.error(err);
       throw new Error(err);
     }
   }
@@ -138,6 +137,7 @@ const shipstationApiCall = async (url, method, body) => {
     const response = await axios(config);
     return response;
   } catch (err) {
+    console.error(err);
     throw new Error(err);
   }
 };
