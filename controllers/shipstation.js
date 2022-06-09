@@ -91,11 +91,31 @@ const splitShipstationOrder = (order, orderItems) => {
         return item.orderItemId === orderItems[x];
       });
 
-      // If this is not the first (primary) order, set the object to create new order in ShipStation.
+      // If this is the first (primary) order, set the appropriate tag in ShipStation. The first order is an update. Automation of Tags by SKU could not initially take place as there were multiple items.
+      if (x === 0) {
+        // Ship-Emmaus
+        if (tempOrder.items[0].warehouseLocation !== null) {
+          tempOrder.tagIds = [34317];
+        }
+        // Dropship-AMC
+        else if (tempOrder.items[0].sku.startsWith("DRA") || tempOrder.items[0].sku.startsWith("DR2"))  {
+          // tempOrder.tagIds = [34316];
+          // Only temporary tag below
+          tempOrder.tagIds = [34550];
+        }
+        // Dropship-Impact
+        else if (tempOrder.items[0].sku.startsWith("DRI"))  {
+          tempOrder.tagIds = [34318];
+        }
+        // Dropship-Trevco
+        else if (tempOrder.items[0].sku.startsWith("DRT"))  {
+          tempOrder.tagIds = [34546];
+        }
+      }
+      // If this is not the first (primary) order, set the object to create new order in ShipStation. Tags will be set via automation as this is a new order.
       if (x !== 0) {
         delete tempOrder.orderKey;
         delete tempOrder.orderId;
-        delete tempOrder.tagId;
         tempOrder.amountPaid = 0;
         tempOrder.taxAmount = 0;
         tempOrder.shippingAmount = 0;
