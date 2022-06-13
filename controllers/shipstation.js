@@ -96,20 +96,31 @@ const splitShipstationOrder = (order, orderItems) => {
         // Ship-Emmaus
         if (tempOrder.items[0].warehouseLocation !== null) {
           tempOrder.tagIds = [34317];
+          tempOrder.advancedOptions.warehouseId = 341785;
         }
         // Dropship-AMC
-        else if (tempOrder.items[0].sku.startsWith("DRA") || tempOrder.items[0].sku.startsWith("DR2"))  {
+        else if (tempOrder.items[0].sku.startsWith("DRA"))  {
+        // else if (tempOrder.items[0].sku.startsWith("DRA") || tempOrder.items[0].sku.startsWith("DR2"))  {
           // tempOrder.tagIds = [34316];
           // Only temporary tag below
           tempOrder.tagIds = [34550];
+          tempOrder.advancedOptions.warehouseId = 343992;
         }
+        // Dropship-AMC Generics
+        else if (tempOrder.items[0].sku.startsWith("DR2"))  {
+          // else if (tempOrder.items[0].sku.startsWith("DRA") || tempOrder.items[0].sku.startsWith("DR2"))  {
+            tempOrder.tagIds = [34316];
+            tempOrder.advancedOptions.warehouseId = 343992;
+          }
         // Dropship-Impact
         else if (tempOrder.items[0].sku.startsWith("DRI"))  {
           tempOrder.tagIds = [34318];
+          tempOrder.advancedOptions.warehouseId = 344000;
         }
         // Dropship-Trevco
         else if (tempOrder.items[0].sku.startsWith("DRT"))  {
           tempOrder.tagIds = [34546];
+          tempOrder.advancedOptions.warehouseId = 344002;
         }
       }
       // If this is not the first (primary) order, set the object to create new order in ShipStation. Tags will be set via automation as this is a new order.
