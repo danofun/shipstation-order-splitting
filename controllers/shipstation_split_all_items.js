@@ -22,6 +22,7 @@ exports.newOrders = async (req, res, next) => {
       data: response.data.orders,
     });
   } catch (err) {
+    console.error(err);
     throw new Error(err);
   }
 };
@@ -37,38 +38,20 @@ const analyzeOrders = async (newOrders) => {
     try {
       const order = newOrders[x];
 
-      // Create an array of all the individual warehouseLocations present on the order.
-      const warehouses = [
+      // Create an array of all the individual items (orderItemId) present on the order.
+      const orderItems = [
         ...new Set(
           order.items.map((item) => {
-            //2Bhip
-            // Dropship-AMC
-            if (item.sku.startsWith("DRA"))  {
-              item.warehouseLocation = "AMC";
-            }
-            // Dropship-AMC Generics
-            else if (item.sku.startsWith("DR2"))  {
-              item.warehouseLocation = "AMCGeneric";
-              }
-            // Dropship-Impact
-            else if (item.sku.startsWith("DRI"))  {
-              item.warehouseLocation = "Impact";
-            }
-            // Dropship-Trevco
-            else if (item.sku.startsWith("DRT"))  {
-              item.warehouseLocation = "Trevco";
-            }
-  
-            if (item.warehouseLocation != null) {
-              return item.warehouseLocation;
+            if (item.orderItemId != null) {
+              return item.orderItemId;
             }
           })
         ),
       ];
 
       // If there are multiple items, split the order.
-      if (item.length > 1) {
-        const orderUpdateArray = splitShipstationOrder(order, warehouses);
+      if (orderItems.length > 1) {
+        const orderUpdateArray = splitShipstationOrder(order, orderItems);
         await shipstationApiCall(
           "https://ssapi.shipstation.com/orders/createorders",
           "post",
@@ -76,50 +59,47 @@ const analyzeOrders = async (newOrders) => {
         );
       }
     } catch (err) {
+      console.error(err);
       throw new Error(err);
     }
   }
 };
 
 /**
- * Copies the primary order for each new order, adjusting the items on each to correspond
- * to the correct warehouse location.
+ * Copies the primary order for each new order.
  *
  * @param  {object} order an order object from the ShipStation API
- * @param {array} warehouses an array of strings containing the warehouse names
+ * @param {array} orderItems an array of strings containing the orderItemId
  *
  * @return {array} an array of order objects to be updated in ShipStation
  */
-const splitShipstationOrder = (order, warehouses) => {
+const splitShipstationOrder = (order, orderItems) => {
   let orderUpdateArray = [];
 
-  // Loop through every warehouse present on the order.
-  for (let x = 0; x < warehouses.length; x++) {
+  // Loop through every item present on the order.
+  for (let x = 0; x < orderItems.length; x++) {
     try {
       // Create a copy of the original order object.
       let tempOrder = { ...order };
 
-      // Give the new order a number to include the warehouse as a suffix.
-      tempOrder.orderNumber = `${tempOrder.orderNumber}-${warehouses[x]}`;
+      // Give the new order a number to include the orderItemId as a suffix.
+      let y = x + 1;
+      tempOrder.orderNumber = `${tempOrder.orderNumber}-${y}`;
 
-      // Filter for the order items for this specific warehouse.
+      // Filter for the order items.
       tempOrder.items = tempOrder.items.filter((item) => {
-        // If the item's warehouseLocation is null, assign it to the first warehouse present.
-        if (item.warehouseLocation == null && x === 0) {
-          item.warehouseLocation = warehouses[x];
-        }
-        return item.warehouseLocation === warehouses[x];
+        return item.orderItemId === orderItems[x];
       });
 
       // If this is the first (primary) order, set the appropriate tag in ShipStation. The first order is an update. Automation of Tags by SKU could not initially take place as there were multiple items.
       if (x === 0) {
         // Ship-Emmaus
-        if (tempOrder.orderNumber.endsWith("-2Bhip")) {
+        if (tempOrder.items[0].warehouseLocation !== null) {
           tempOrder.tagIds = [34317];
           tempOrder.advancedOptions.warehouseId = 341785;
         }
         // Dropship-AMC
-        else if (tempOrder.orderNumber.endsWith("-AMC"))  {
+        else if (tempOrder.items[0].sku.startsWith("DRA"))  {
         // else if (tempOrder.items[0].sku.startsWith("DRA") || tempOrder.items[0].sku.startsWith("DR2"))  {
           // tempOrder.tagIds = [34316];
           // Only temporary tag below
@@ -127,24 +107,23 @@ const splitShipstationOrder = (order, warehouses) => {
           tempOrder.advancedOptions.warehouseId = 343992;
         }
         // Dropship-AMC Generics
-        else if (tempOrder.orderNumber.endsWith("-AMCGeneric"))  {
+        else if (tempOrder.items[0].sku.startsWith("DR2"))  {
           // else if (tempOrder.items[0].sku.startsWith("DRA") || tempOrder.items[0].sku.startsWith("DR2"))  {
             tempOrder.tagIds = [34316];
             tempOrder.advancedOptions.warehouseId = 343992;
           }
         // Dropship-Impact
-        else if (tempOrder.orderNumber.endsWith("-Impact"))  {
+        else if (tempOrder.items[0].sku.startsWith("DRI"))  {
           tempOrder.tagIds = [34318];
           tempOrder.advancedOptions.warehouseId = 344000;
         }
         // Dropship-Trevco
-        else if (tempOrder.orderNumber.endsWith("-Trevco"))  {
+        else if (tempOrder.items[0].sku.startsWith("DRT"))  {
           tempOrder.tagIds = [34546];
           tempOrder.advancedOptions.warehouseId = 344002;
         }
       }
-      
-      // If this is not the first (primary) order, set the object to create new order in ShipStation.
+      // If this is not the first (primary) order, set the object to create new order in ShipStation. Tags will be set via automation as this is a new order.
       if (x !== 0) {
         delete tempOrder.orderKey;
         delete tempOrder.orderId;
@@ -154,6 +133,7 @@ const splitShipstationOrder = (order, warehouses) => {
       }
       orderUpdateArray.push(tempOrder);
     } catch (err) {
+      console.error(err);
       throw new Error(err);
     }
   }
@@ -189,6 +169,7 @@ const shipstationApiCall = async (url, method, body) => {
     const response = await axios(config);
     return response;
   } catch (err) {
+    console.error(err);
     throw new Error(err);
   }
 };
