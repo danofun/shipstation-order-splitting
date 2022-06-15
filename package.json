@@ -4,11 +4,11 @@
   "description": "Node.js app that analyzes new ShipStation orders and splits orders into multiple shipments.",
   "main": "app.js",
   "engines": {
-    "node": "14.16.1"
+    "node": "16.14.2"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node app.js"
+    "start": "node app.js",
+    "build": "cd client && npm install && npm run build"
   },
   "keywords": [
     "shipstation",
@@ -16,7 +16,7 @@
     "order",
     "management"
   ],
-  "author": "Austin Johnson",
+  "author": "",
   "license": "MIT",
   "devDependencies": {
     "nodemon": "^2.0.12"
@@ -25,7 +25,6 @@
     "axios": "^0.21.1",
     "buffer": "^6.0.3",
     "compression": "^1.7.4",
-    "csv": "^6.1.0",
     "express": "^4.17.1",
     "node-fetch": "^2.6.1"
   }
