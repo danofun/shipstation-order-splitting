@@ -41,10 +41,10 @@ npm install
 ```
 npm start
 ```
-  Navigate to `http://localhost:10003`
+  Navigate to `http://localhost:3001`
 
 - API Document endpoints
 
-  ShipStation New Order Webhook: Endpoint : http://localhost:10003/shipstation/new-order-webhook
+  ShipStation New Order Webhook: Endpoint : http://localhost:3001/shipstation/new-order-webhook
   
   

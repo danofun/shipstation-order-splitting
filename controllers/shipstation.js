@@ -66,9 +66,17 @@ const analyzeOrders = async (newOrders) => {
         ),
       ];
 
-      // If there are multiple items, split the order.
-      if (item.length > 1) {
+      // If there are multiple warehouse locations, split the order.
+      if (warehouses.length > 1) {
         const orderUpdateArray = splitShipstationOrder(order, warehouses);
+        await shipstationApiCall(
+          "https://ssapi.shipstation.com/orders/createorders",
+          "post",
+          orderUpdateArray
+        );
+      }
+      else if (warehouses.length === 1 && order.items.length > 1 && order.tagIds == null) {
+        const orderUpdateArray = updateShipstationOrder(order, warehouses);
         await shipstationApiCall(
           "https://ssapi.shipstation.com/orders/createorders",
           "post",
@@ -111,37 +119,34 @@ const splitShipstationOrder = (order, warehouses) => {
         return item.warehouseLocation === warehouses[x];
       });
 
-      // If this is the first (primary) order, set the appropriate tag in ShipStation. The first order is an update. Automation of Tags by SKU could not initially take place as there were multiple items.
-      if (x === 0) {
-        // Ship-Emmaus
-        if (tempOrder.orderNumber.endsWith("-2Bhip")) {
-          tempOrder.tagIds = [34317];
-          tempOrder.advancedOptions.warehouseId = 341785;
-        }
-        // Dropship-AMC
-        else if (tempOrder.orderNumber.endsWith("-AMC"))  {
+      // Ship-Emmaus
+      if (tempOrder.orderNumber.endsWith("-2Bhip")) {
+        tempOrder.tagIds = [34317];
+        tempOrder.advancedOptions.warehouseId = 341785;
+      }
+      // Dropship-AMC
+      else if (tempOrder.orderNumber.endsWith("-AMC"))  {
+      // else if (tempOrder.items[0].sku.startsWith("DRA") || tempOrder.items[0].sku.startsWith("DR2"))  {
+        // tempOrder.tagIds = [34316];
+        // Only temporary tag below
+        tempOrder.tagIds = [34550];
+        tempOrder.advancedOptions.warehouseId = 343992;
+      }
+      // Dropship-AMC Generics
+      else if (tempOrder.orderNumber.endsWith("-AMCGeneric"))  {
         // else if (tempOrder.items[0].sku.startsWith("DRA") || tempOrder.items[0].sku.startsWith("DR2"))  {
-          // tempOrder.tagIds = [34316];
-          // Only temporary tag below
-          tempOrder.tagIds = [34550];
+          tempOrder.tagIds = [34316];
           tempOrder.advancedOptions.warehouseId = 343992;
         }
-        // Dropship-AMC Generics
-        else if (tempOrder.orderNumber.endsWith("-AMCGeneric"))  {
-          // else if (tempOrder.items[0].sku.startsWith("DRA") || tempOrder.items[0].sku.startsWith("DR2"))  {
-            tempOrder.tagIds = [34316];
-            tempOrder.advancedOptions.warehouseId = 343992;
-          }
-        // Dropship-Impact
-        else if (tempOrder.orderNumber.endsWith("-Impact"))  {
-          tempOrder.tagIds = [34318];
-          tempOrder.advancedOptions.warehouseId = 344000;
-        }
-        // Dropship-Trevco
-        else if (tempOrder.orderNumber.endsWith("-Trevco"))  {
-          tempOrder.tagIds = [34546];
-          tempOrder.advancedOptions.warehouseId = 344002;
-        }
+      // Dropship-Impact
+      else if (tempOrder.orderNumber.endsWith("-Impact"))  {
+        tempOrder.tagIds = [34318];
+        tempOrder.advancedOptions.warehouseId = 344000;
+      }
+      // Dropship-Trevco
+      else if (tempOrder.orderNumber.endsWith("-Trevco"))  {
+        tempOrder.tagIds = [34546];
+        tempOrder.advancedOptions.warehouseId = 344002;
       }
       
       // If this is not the first (primary) order, set the object to create new order in ShipStation.
@@ -160,6 +165,45 @@ const splitShipstationOrder = (order, warehouses) => {
 
   return orderUpdateArray;
 };
+
+
+const updateShipstationOrder = (order, warehouses) => {
+  let orderUpdateArray = [];
+
+  try {
+    // Ship-Emmaus
+    if (order.items[0].warehouseLocation === "2Bhip") {
+      order.tagIds = [34317];
+      order.advancedOptions.warehouseId = 341785;
+    }
+    // Dropship-AMC
+    else if (order.items[0].warehouseLocation === "AMC") {
+      order.tagIds = [34550];
+      order.advancedOptions.warehouseId = 343992;
+    }
+    // Dropship-AMC Generics
+    else if (order.items[0].warehouseLocation === "AMCGeneric") {
+      order.tagIds = [34316];
+      order.advancedOptions.warehouseId = 343992;
+      }
+    // Dropship-Impact
+    else if (order.items[0].warehouseLocation === "Impact") {
+      order.tagIds = [34318];
+      order.advancedOptions.warehouseId = 344000;
+    }
+    // Dropship-Trevco
+    else if (order.items[0].warehouseLocation === "Trevco") {
+      order.tagIds = [34546];
+      order.advancedOptions.warehouseId = 344002;
+    }
+    orderUpdateArray.push(order);
+  } catch (err) {
+    throw new Error(err);
+  }
+
+return orderUpdateArray;
+};
+
 
 /**
  * Performs a ShipStation API Call

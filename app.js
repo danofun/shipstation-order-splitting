@@ -11,4 +11,4 @@ app.use(express.json());
 
 app.use("/shipstation/", shipStationRoutes);
 
-app.listen(process.env.PORT || 10003);
+app.listen(process.env.PORT || 3001);
