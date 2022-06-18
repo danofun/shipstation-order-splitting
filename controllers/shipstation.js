@@ -1,3 +1,4 @@
+const fs = require("fs");
 const axios = require("axios");
 
 /**
@@ -42,8 +43,39 @@ const analyzeOrders = async (newOrders) => {
         ...new Set(
           order.items.map((item) => {
             //2Bhip
+            try {
+              const data = fs.readFileSync('./upload/inventory.json', 'utf8');
+              const inventory = JSON.parse(data);
+              for(var i = 0; i < inventory.length; i++){
+                if(item.sku == inventory[i].SKU) {
+                  console.log(item.sku, 'Stock', inventory[i].Available, ': Quantity ordered', item.quantity);
+                  if(inventory[i].Available >= item.quantity) {
+                    twobhipWarehouse = true;
+                    inventory[i].Available = inventory[i].Available - item.quantity;
+                    console.log('NEW Stock:', inventory[i].Available);
+                    var writedata = JSON.stringify(inventory);
+                    fs.writeFileSync('./upload/inventory.json', writedata, (err) => {
+                      if (err) throw err;
+                    });
+                    break;
+                  }
+                  else {
+                    console.log(inventory[i].Available, 'items is not enought to fill the order of', item.quantity)
+                    twobhipWarehouse = false;
+                  }
+                }
+                else {
+                  twobhipWarehouse = false;
+                }
+              }
+            } catch (err) {
+            console.log(`Error reading file from disk: ${err}`);
+        }
+            if (twobhipWarehouse === true) {
+              item.warehouseLocation = "2Bhip";
+            }
             // Dropship-AMC
-            if (item.sku.startsWith("DRA"))  {
+            else if (item.sku.startsWith("DRA"))  {
               item.warehouseLocation = "AMC";
             }
             // Dropship-AMC Generics
@@ -57,6 +89,9 @@ const analyzeOrders = async (newOrders) => {
             // Dropship-Trevco
             else if (item.sku.startsWith("DRT"))  {
               item.warehouseLocation = "Trevco";
+            }
+            else {
+              item.warehouseLocation = "SORT";
             }
   
             if (item.warehouseLocation != null) {
@@ -75,7 +110,7 @@ const analyzeOrders = async (newOrders) => {
           orderUpdateArray
         );
       }
-      else if (warehouses.length === 1 && order.items.length > 1 && order.tagIds == null) {
+      else if (warehouses.length === 1 && order.items.length > 1 && order.tagIds == 34548) {
         const orderUpdateArray = updateShipstationOrder(order, warehouses);
         await shipstationApiCall(
           "https://ssapi.shipstation.com/orders/createorders",
@@ -83,6 +118,30 @@ const analyzeOrders = async (newOrders) => {
           orderUpdateArray
         );
       }
+      else if (warehouses.length === 1) {
+        const orderUpdateArray = updateShipstationOrder(order, warehouses);
+        await shipstationApiCall(
+          "https://ssapi.shipstation.com/orders/createorders",
+          "post",
+          orderUpdateArray
+        );
+      }
+      // else if (warehouses.length === 1 && twobhipWarehouse === true) {
+      //   const orderUpdateArray = updateShipstationOrder(order, warehouses);
+      //   await shipstationApiCall(
+      //     "https://ssapi.shipstation.com/orders/createorders",
+      //     "post",
+      //     orderUpdateArray
+      //   );
+      // }
+      // else if (warehouses.length === 1 && order.items[0].warehouseLocation === "SORT") {
+      //   const orderUpdateArray = updateShipstationOrder(order, warehouses);
+      //   await shipstationApiCall(
+      //     "https://ssapi.shipstation.com/orders/createorders",
+      //     "post",
+      //     orderUpdateArray
+      //   );
+      // }
     } catch (err) {
       throw new Error(err);
     }
@@ -118,7 +177,7 @@ const splitShipstationOrder = (order, warehouses) => {
         }
         return item.warehouseLocation === warehouses[x];
       });
-
+      
       // Ship-Emmaus
       if (tempOrder.orderNumber.endsWith("-2Bhip")) {
         tempOrder.tagIds = [34317];
@@ -147,6 +206,10 @@ const splitShipstationOrder = (order, warehouses) => {
       else if (tempOrder.orderNumber.endsWith("-Trevco"))  {
         tempOrder.tagIds = [34546];
         tempOrder.advancedOptions.warehouseId = 344002;
+      }
+      // Unknown
+      else if (tempOrder.orderNumber.endsWith("-SORT"))  {
+        tempOrder.tagIds = [34548];
       }
       
       // If this is not the first (primary) order, set the object to create new order in ShipStation.
@@ -195,6 +258,10 @@ const updateShipstationOrder = (order, warehouses) => {
     else if (order.items[0].warehouseLocation === "Trevco") {
       order.tagIds = [34546];
       order.advancedOptions.warehouseId = 344002;
+    }
+    // Unknown Shipper
+    else {
+      order.tagIds = [34548];
     }
     orderUpdateArray.push(order);
   } catch (err) {
