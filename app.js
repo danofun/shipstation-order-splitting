@@ -48,7 +48,6 @@ app.post('/read', upload.single('file'), (req, res) => {
       } catch (err) {
         console.error(err);
       }
-      // console.info(records);
     })();
 
     const data = fs.readFileSync(file.path)

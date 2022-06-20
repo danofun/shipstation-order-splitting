@@ -42,7 +42,7 @@ const analyzeOrders = async (newOrders) => {
       const warehouses = [
         ...new Set(
           order.items.map((item) => {
-            //2Bhip
+            //2Bhip - Check inventory
             try {
               const data = fs.readFileSync('./upload/inventory.json', 'utf8');
               const inventory = JSON.parse(data);
@@ -62,6 +62,7 @@ const analyzeOrders = async (newOrders) => {
                   else {
                     console.log(inventory[i].Available, 'items is not enought to fill the order of', item.quantity)
                     twobhipWarehouse = false;
+                    break;
                   }
                 }
                 else {
@@ -70,7 +71,7 @@ const analyzeOrders = async (newOrders) => {
               }
             } catch (err) {
             console.log(`Error reading file from disk: ${err}`);
-        }
+          }
             if (twobhipWarehouse === true) {
               item.warehouseLocation = "2Bhip";
             }
@@ -90,12 +91,9 @@ const analyzeOrders = async (newOrders) => {
             else if (item.sku.startsWith("DRT"))  {
               item.warehouseLocation = "Trevco";
             }
+            // Another Supplier
             else {
               item.warehouseLocation = "SORT";
-            }
-  
-            if (item.warehouseLocation != null) {
-              return item.warehouseLocation;
             }
           })
         ),
@@ -110,7 +108,8 @@ const analyzeOrders = async (newOrders) => {
           orderUpdateArray
         );
       }
-      else if (warehouses.length === 1 && order.items.length > 1 && order.tagIds == 34548) {
+      // If there is a single warehouse locations, update the order with a tag and ship from location.
+      else if (warehouses.length === 1 && order.tagIds == null) {
         const orderUpdateArray = updateShipstationOrder(order, warehouses);
         await shipstationApiCall(
           "https://ssapi.shipstation.com/orders/createorders",
@@ -118,30 +117,6 @@ const analyzeOrders = async (newOrders) => {
           orderUpdateArray
         );
       }
-      else if (warehouses.length === 1) {
-        const orderUpdateArray = updateShipstationOrder(order, warehouses);
-        await shipstationApiCall(
-          "https://ssapi.shipstation.com/orders/createorders",
-          "post",
-          orderUpdateArray
-        );
-      }
-      // else if (warehouses.length === 1 && twobhipWarehouse === true) {
-      //   const orderUpdateArray = updateShipstationOrder(order, warehouses);
-      //   await shipstationApiCall(
-      //     "https://ssapi.shipstation.com/orders/createorders",
-      //     "post",
-      //     orderUpdateArray
-      //   );
-      // }
-      // else if (warehouses.length === 1 && order.items[0].warehouseLocation === "SORT") {
-      //   const orderUpdateArray = updateShipstationOrder(order, warehouses);
-      //   await shipstationApiCall(
-      //     "https://ssapi.shipstation.com/orders/createorders",
-      //     "post",
-      //     orderUpdateArray
-      //   );
-      // }
     } catch (err) {
       throw new Error(err);
     }
@@ -207,7 +182,7 @@ const splitShipstationOrder = (order, warehouses) => {
         tempOrder.tagIds = [34546];
         tempOrder.advancedOptions.warehouseId = 344002;
       }
-      // Unknown
+      // Another Supplier
       else if (tempOrder.orderNumber.endsWith("-SORT"))  {
         tempOrder.tagIds = [34548];
       }
