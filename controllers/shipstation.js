@@ -43,7 +43,7 @@ const analyzeOrders = async (newOrders) => {
         ...new Set(
           order.items.map((item) => {
             //2Bhip - Check inventory
-            try {
+            istwobhip: try {
               const data = fs.readFileSync('./upload/inventory.json', 'utf8');
               const inventory = JSON.parse(data);
               for(var i = 0; i < inventory.length; i++){
@@ -57,12 +57,12 @@ const analyzeOrders = async (newOrders) => {
                     fs.writeFileSync('./upload/inventory.json', writedata, (err) => {
                       if (err) throw err;
                     });
-                    break;
+                    break istwobhip;
                   }
                   else {
                     console.log(inventory[i].Available, 'items is not enought to fill the order of', item.quantity)
                     twobhipWarehouse = false;
-                    break;
+                    break istwobhip;
                   }
                 }
                 else {
