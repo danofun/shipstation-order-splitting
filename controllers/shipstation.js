@@ -48,20 +48,20 @@ const analyzeOrders = async (newOrders) => {
               const inventory = JSON.parse(data);
               for(var i = 0; i < inventory.length; i++){
                 if(item.sku == inventory[i].SKU) {
-                  console.log(item.sku, 'Stock', inventory[i].Available, ': Quantity ordered', item.quantity);
+                  console.log(item.sku, 'Stock:', inventory[i].Available, ': Quantity ordered', item.quantity);
                   if(inventory[i].Available >= item.quantity) {
                     twobhipWarehouse = true;
                     inventory[i].Available = inventory[i].Available - item.quantity;
-                    console.log('NEW Stock:', inventory[i].Available);
                     var writedata = JSON.stringify(inventory);
                     fs.writeFileSync('./upload/inventory.json', writedata, (err) => {
                       if (err) throw err;
                     });
+                    console.log('Inventory file updated. NEW Stock:', inventory[i].Available);
                     break istwobhip;
                   }
                   else {
-                    console.log(inventory[i].Available, 'items is not enought to fill the order of', item.quantity)
                     twobhipWarehouse = false;
+                    console.log(inventory[i].Available, 'items is not enought to fill the order of', item.quantity)
                     break istwobhip;
                   }
                 }
@@ -93,7 +93,7 @@ const analyzeOrders = async (newOrders) => {
             }
             // Another Supplier
             else {
-              item.warehouseLocation = "SORT";
+              item.warehouseLocation = "MANUAL";
             }
           })
         ),
@@ -183,7 +183,7 @@ const splitShipstationOrder = (order, warehouses) => {
         tempOrder.advancedOptions.warehouseId = 344002;
       }
       // Another Supplier
-      else if (tempOrder.orderNumber.endsWith("-SORT"))  {
+      else if (tempOrder.orderNumber.endsWith("-MANUAL"))  {
         tempOrder.tagIds = [34548];
       }
       
