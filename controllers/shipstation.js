@@ -48,6 +48,7 @@ const analyzeOrders = async (newOrders) => {
               const inventory = JSON.parse(data);
               for(var i = 0; i < inventory.length; i++){
                 if(item.sku == inventory[i].SKU) {
+                  console.log('Order #', order.orderNumber);
                   console.log(item.sku, 'Stock:', inventory[i].Available, ': Quantity ordered', item.quantity);
                   if(inventory[i].Available >= item.quantity) {
                     twobhipWarehouse = true;
