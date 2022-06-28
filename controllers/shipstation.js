@@ -190,7 +190,8 @@ const splitShipstationOrder = (order, warehouses) => {
             }
             // Another Supplier
             else if (tempOrder.orderNumber.endsWith("-MANUAL")) {
-                tempOrder.tagIds = [34548];
+                tempOrder.tagIds = [34317,34548];
+                tempOrder.advancedOptions.warehouseId = 341785;
             }
 
             // If this is not the first (primary) order, set the object to create new order in ShipStation.
@@ -242,7 +243,8 @@ const updateShipstationOrder = (order, warehouses) => {
         }
         // Unknown Shipper
         else {
-            order.tagIds = [34548];
+            order.tagIds = [34317,34548];
+            order.advancedOptions.warehouseId = 341785;
         }
         orderUpdateArray.push(order);
     } catch (err) {
