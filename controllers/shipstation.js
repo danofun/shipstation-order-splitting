@@ -90,6 +90,10 @@ const analyzeOrders = async (newOrders) => {
                         else if (item.sku.startsWith("DRT")) {
                             item.warehouseLocation = "Trevco";
                         }
+                        // Dropship-TLine
+                        else if (item.sku.startsWith("DRL")) {
+                            item.warehouseLocation = "TLine";
+                        }
                         // Another Supplier
                         else {
                             item.warehouseLocation = "MANUAL";
@@ -188,6 +192,11 @@ const splitShipstationOrder = (order, warehouses) => {
                 tempOrder.tagIds = [34546];
                 tempOrder.advancedOptions.warehouseId = 344002;
             }
+            // Dropship-TLine
+            else if (tempOrder.orderNumber.endsWith("-TLine")) {
+                tempOrder.tagIds = [40867];
+                tempOrder.advancedOptions.warehouseId = 425382;
+            }
             // Another Supplier
             else if (tempOrder.orderNumber.endsWith("-MANUAL")) {
                 tempOrder.tagIds = [34317,34548];
@@ -240,6 +249,11 @@ const updateShipstationOrder = (order, warehouses) => {
         else if (order.items[0].warehouseLocation === "Trevco") {
             order.tagIds = [34546];
             order.advancedOptions.warehouseId = 344002;
+        }
+        // Dropship-TLine
+        else if (order.items[0].warehouseLocation === "TLine") {
+            order.tagIds = [40867];
+            order.advancedOptions.warehouseId = 425382;
         }
         // Unknown Shipper
         else {
