@@ -49,19 +49,19 @@ const analyzeOrders = async (newOrders) => {
                             for (var i = 0; i < inventory.length; i++) {
                                 if (item.sku == inventory[i].SKU) {
                                     console.log('Order #', order.orderNumber);
-                                    console.log(item.sku, 'Stock:', inventory[i].Available, ': Quantity ordered', item.quantity);
-                                    if (inventory[i].Available >= item.quantity) {
+                                    console.log(item.sku, 'Stock:', inventory[i].OnHand, ': Quantity ordered', item.quantity);
+                                    if (inventory[i].OnHand >= item.quantity) {
                                         twobhipWarehouse = true;
-                                        inventory[i].Available = inventory[i].Available - item.quantity;
+                                        inventory[i].OnHand = inventory[i].OnHand - item.quantity;
                                         var writedata = JSON.stringify(inventory);
                                         fs.writeFileSync('./upload/inventory.json', writedata, (err) => {
                                             if (err) throw err;
                                         });
-                                        console.log('Inventory file updated. NEW Stock:', inventory[i].Available);
+                                        console.log('Inventory file updated. NEW Stock:', inventory[i].OnHand);
                                         break istwobhip;
                                     } else {
                                         twobhipWarehouse = false;
-                                        console.log(inventory[i].Available, 'items is not enought to fill the order of', item.quantity)
+                                        console.log(inventory[i].OnHand, 'items is not enought to fill the order of', item.quantity)
                                         break istwobhip;
                                     }
                                 } else {
@@ -80,7 +80,7 @@ const analyzeOrders = async (newOrders) => {
                         }
                         // Dropship-AMC Generics
                         else if (item.sku.startsWith("DR2")) {
-                            item.warehouseLocation = "AMCGeneric";
+                            item.warehouseLocation = "AMC";
                         }
                         // Dropship-Impact
                         else if (item.sku.startsWith("DRI")) {
@@ -173,12 +173,6 @@ const splitShipstationOrder = (order, warehouses) => {
                 // else if (tempOrder.items[0].sku.startsWith("DRA") || tempOrder.items[0].sku.startsWith("DR2"))  {
                 // tempOrder.tagIds = [34316];
                 // Only temporary tag below
-                tempOrder.tagIds = [34550];
-                tempOrder.advancedOptions.warehouseId = 343992;
-            }
-            // Dropship-AMC Generics
-            else if (tempOrder.orderNumber.endsWith("-AMCGeneric")) {
-                // else if (tempOrder.items[0].sku.startsWith("DRA") || tempOrder.items[0].sku.startsWith("DR2"))  {
                 tempOrder.tagIds = [34316];
                 tempOrder.advancedOptions.warehouseId = 343992;
             }
@@ -232,11 +226,6 @@ const updateShipstationOrder = (order, warehouses) => {
         }
         // Dropship-AMC
         else if (order.items[0].warehouseLocation === "AMC") {
-            order.tagIds = [34550];
-            order.advancedOptions.warehouseId = 343992;
-        }
-        // Dropship-AMC Generics
-        else if (order.items[0].warehouseLocation === "AMCGeneric") {
             order.tagIds = [34316];
             order.advancedOptions.warehouseId = 343992;
         }
@@ -285,7 +274,7 @@ const shipstationApiCall = async (url, method, body) => {
             url: url,
             headers: {
                 // Your API Authorization token goes here.
-                Authorization: process.env.SHIPSTATION_API_KEY,
+               Authorization: `Basic ${process.env.SHIPSTATION_API_KEY}`,
                 "Content-Type": "application/json",
             },
         };

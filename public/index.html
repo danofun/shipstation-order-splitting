@@ -31,8 +31,10 @@
     })
 
     submitFile.addEventListener('click', function () {
-      if (!file || file.type !== 'text/plain') {
-        alert('Please select the ShipStation -> Insights -> Reports -> Inventory Status Report -> TXT file')
+      // if (!file || file.type !== 'text/plain') {
+      //   alert('Please select the ShipStation -> Insights -> Reports -> Inventory Status Report -> TXT file')
+        if (!file || file.type !== 'text/csv') {
+        alert('Please select the ShipStation -> Products -> Inventory -> Export')
         return
       }
 
@@ -64,7 +66,8 @@
             autoColumns: true
           });
         } else {
-          alert('The TXT is empty')
+          // alert('The TXT is empty')
+          alert('The CSV is empty')
         }
       })
       .catch((e) => alert(e.message))

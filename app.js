@@ -30,7 +30,8 @@ app.post('/read', upload.single('file'), (req, res) => {
       const parser = fs
         .createReadStream(file.path)
         .pipe(parse({
-          from_line: 2, skip_empty_lines: true, trim: true, delimiter: '\t', columns: true
+          // from_line: 2, skip_empty_lines: true, trim: true, delimiter: '\t', columns: true
+          skip_empty_lines: true, trim: true, columns: true
         }));
       for await (const record of parser) {
         // Work with each record
@@ -58,7 +59,8 @@ app.post('/read', upload.single('file'), (req, res) => {
       }
       
       return res.json({data: records})
-    }, {from_line: 2, skip_empty_lines: true, trim: true, delimiter: '\t'})
+    // }, {from_line: 2, skip_empty_lines: true, trim: true, delimiter: '\t'})
+    }, {skip_empty_lines: true, trim: true})
   });
 
 
