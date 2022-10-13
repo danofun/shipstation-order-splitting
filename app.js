@@ -1,3 +1,4 @@
+require('dotenv').config();
 const fs = require('fs');
 const parse = require('csv-parse').parse;
 const os = require('os');
